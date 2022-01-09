@@ -29,16 +29,19 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
        - name: Set up Docker Buildx
          run: | 
-            docker build .
-             
-       - name: Build and push
-         id: docker_build
-         uses: docker/build-push-action@v2
-         with:
-           context: ./
-           file: ./Dockerfile
-           push: true
-           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/yourimagename:yourtag
+            #docker build .
+            docker build -t demo-go .
+            docker images
+            dive demo-go
+            docker run -it --rm demo-go
+     #  - name: Build and push
+      #   id: docker_build
+       #  uses: docker/build-push-action@v2
+        # with:
+         #  context: ./
+          # file: ./Dockerfile
+           #push: true
+          # tags: ${{ secrets.DOCKER_HUB_USERNAME }}/yourimagename:yourtag
            
        - name: Image digest
          run: echo ${{ steps.docker_build.outputs.digest }}
