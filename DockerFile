@@ -1,16 +1,42 @@
-FROM alpine:3.8
-ENV KUSTOMIZE_VER 2.0.0
-ENV KUBECTL_VER 1.13.3
+#FROM alpine:3.8
+#ENV KUSTOMIZE_VER 2.0.0
+#ENV KUBECTL_VER 1.13.3
 
-RUN apk --no-cache add curl gettext
+#RUN apk --no-cache add curl gettext
 
-RUN mkdir /working
-WORKDIR /working
+#RUN mkdir /working
+#WORKDIR /working
 
-RUN curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER}_linux_amd64  -o /usr/bin/kustomize \
+#RUN curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER}_linux_amd64  -o /usr/bin/kustomize \
     && chmod +x /usr/bin/kustomize
 
-RUN curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl -o /usr/bin/kubectl \
+#RUN curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl -o /usr/bin/kubectl \
     && chmod +x /usr/bin/kubectl
 
-CMD ["/usr/bin/kustomize"]
+#CMD ["/usr/bin/kustomize"]
+
+
+
+
+
+# build
+FROM golang:alpine as builder
+ARG VERSION
+ARG COMMIT
+ARG DATE
+RUN mkdir /build
+ADD . /build/
+WORKDIR /build/kustomize
+RUN CGO_ENABLED=0 GO111MODULE=on go build \
+    -ldflags="-s -X sigs.k8s.io/kustomize/api/provenance.version=${VERSION} \
+    -X sigs.k8s.io/kustomize/api/provenance.gitCommit=${COMMIT} \
+    -X sigs.k8s.io/kustomize/api/provenance.buildDate=${DATE}"
+
+# only copy binary
+FROM alpine
+# install dependencies
+RUN apk add --no-cache git openssh
+COPY --from=builder /build/kustomize/kustomize /app/
+WORKDIR /app
+ENV PATH "$PATH:/app"
+ENTRYPOINT ["/app/kustomize"]
