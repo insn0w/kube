@@ -36,7 +36,7 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build \
 FROM alpine
 # install dependencies
 RUN apk add --no-cache git openssh
-COPY --from=builder /build/kustomize/kustomize /app/
+COPY --from=builder /build/kustomize/ /app/
 WORKDIR /app
 ENV PATH "$PATH:/app"
 ENTRYPOINT ["/app/kustomize"]
